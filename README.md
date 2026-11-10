@@ -29,24 +29,11 @@ Para compilar:
 - Node.js 22.12 o posterior de la rama 22, con npm.
 - Visual Studio con la carga de trabajo **Desarrollo de escritorio de .NET**, si vas a usar el IDE.
 
-La publicación del script incluye el runtime de .NET.
+El perfil de publicación Windows incluye el runtime de .NET.
 
 ## Descargar la aplicación
 
 La versión final se publicará en [GitHub Releases](https://github.com/KHiga007/MochiMochi-VRC/releases).
-
-## Compilar desde el código fuente
-
-~~~powershell
-git clone https://github.com/KHiga007/MochiMochi-VRC.git
-cd MochiMochi-VRC
-.\scripts\Preparar-App.ps1
-& '.\dist\VRC Shelf.exe'
-~~~
-
-El script instala las dependencias de Vue, compila la interfaz, ejecuta sus pruebas y publica la aplicación. Cerrá la app antes de instalar una nueva compilación.
-
-
 
 ## Abrir en Visual Studio
 
@@ -55,6 +42,14 @@ El script instala las dependencias de Vue, compila la interfaz, ejecuta sus prue
 3. Presioná **F5**.
 
 La compilación desde Visual Studio prepara la interfaz Vue. El Explorador de soluciones incluye el código C#, la interfaz y las pruebas.
+
+## Publicar desde Visual Studio
+
+1. Hacé clic derecho en **VrcShelf.Desktop** y elegí **Publicar**.
+2. Seleccioná el perfil **Windows**.
+3. Cerrá la app si está abierta desde dist y presioná **Publicar**.
+
+La aplicación completa se genera en dist, con la interfaz Vue y el runtime de .NET para Windows x64.
 
 ## Configurar la biblioteca
 
@@ -80,7 +75,7 @@ La biblioteca utiliza carpetas por categoría y puede leer los metadatos de 99_C
 | ui/tests | Pruebas de la interfaz y de integración |
 | ui/server | Servidor utilizado por las pruebas de integración |
 | Tests | Comprobaciones de C# |
-| scripts | Compilación y publicación local |
+| Properties/PublishProfiles | Perfil de publicación para Windows |
 | Program.cs | Punto de entrada de la aplicación |
 
 ## Pruebas
@@ -105,3 +100,4 @@ npm test
 El código del proyecto se distribuye bajo la [licencia MIT](LICENSE), con copyright de KHiga007.
 
 Las dependencias y fuentes conservan sus respectivas licencias, disponibles en [ui/public/licenses](ui/public/licenses) y [ui/public/fonts](ui/public/fonts). Los assets que cada usuario agrega a su biblioteca se rigen por las licencias de sus autores.
+

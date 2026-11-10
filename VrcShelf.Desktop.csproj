@@ -28,11 +28,7 @@
           Condition="'$(BuildVue)' == 'true' and '$(DesignTimeBuild)' != 'true'">
     <Exec Command="npm.cmd run build" WorkingDirectory="$(MSBuildProjectDirectory)\ui" />
   </Target>
-  <ItemGroup>
-    <Content Include="ui\dist\**\*" Link="web\%(RecursiveDir)%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-  </ItemGroup>
-  <Target Name="CopyVueForDebugging" AfterTargets="Build" DependsOnTargets="CompileVue"
+<Target Name="CopyVueForDebugging" AfterTargets="Build" DependsOnTargets="CompileVue"
           Condition="'$(BuildVue)' == 'true' and '$(DesignTimeBuild)' != 'true'">
     <ItemGroup>
       <VueOutput Include="ui\dist\**\*" />
@@ -46,6 +42,17 @@
       <Reference Remove="@(Reference)" Condition="$([System.String]::Copy('%(Reference.Identity)').EndsWith('Microsoft.Web.WebView2.Wpf.dll'))" />
     </ItemGroup>
   </Target>
+  <Target Name="CopyVueForPublishing" AfterTargets="Publish" DependsOnTargets="CompileVue">
+    <ItemGroup>
+      <PublishedVue Include="ui\dist\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(PublishedVue)"
+          DestinationFiles="@(PublishedVue->'$(PublishDir)web\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
 </Project>
+
+
+
 
 
