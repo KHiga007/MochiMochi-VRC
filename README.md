@@ -33,7 +33,7 @@ El perfil de publicación Windows incluye el runtime de .NET.
 
 ## Descargar la aplicación
 
-La versión final se publicará en [GitHub Releases](https://github.com/KHiga007/MochiMochi-VRC/releases).
+Descargá la versión portable para Windows x64 desde [GitHub Releases](https://github.com/KHiga007/MochiMochi-VRC/releases/latest).
 
 ## Licencia
 
