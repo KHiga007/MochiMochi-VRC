@@ -31,7 +31,11 @@ Para compilar:
 
 La publicación del script incluye el runtime de .NET.
 
-## Descargar y compilar
+## Descargar la aplicación
+
+La versión final se publicará en [GitHub Releases](https://github.com/KHiga007/MochiMochi-VRC/releases).
+
+## Compilar desde el código fuente
 
 ~~~powershell
 git clone https://github.com/KHiga007/MochiMochi-VRC.git
@@ -42,7 +46,7 @@ cd MochiMochi-VRC
 
 El script instala las dependencias de Vue, compila la interfaz, ejecuta sus pruebas y publica la aplicación. Cerrá la app antes de instalar una nueva compilación.
 
-Para trasladar la aplicación a otra carpeta, copiá el contenido completo de dist.
+
 
 ## Abrir en Visual Studio
 
