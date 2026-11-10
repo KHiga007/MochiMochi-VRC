@@ -33,68 +33,6 @@ El perfil de publicación Windows incluye el runtime de .NET.
 
 ## Descargar la aplicación
 
-La versión final se publicará en [GitHub Releases](https://github.com/KHiga007/MochiMochi-VRC/releases).
-
-## Abrir en Visual Studio
-
-1. Abrí **MochiMochi VRC.sln**.
-2. Seleccioná **VrcShelf.Desktop** como proyecto de inicio.
-3. Presioná **F5**.
-
-La compilación desde Visual Studio prepara la interfaz Vue. El Explorador de soluciones incluye el código C#, la interfaz y las pruebas.
-
-## Publicar desde Visual Studio
-
-1. Hacé clic derecho en **VrcShelf.Desktop** y elegí **Publicar**.
-2. Seleccioná el perfil **Windows**.
-3. Cerrá la app si está abierta desde dist y presioná **Publicar**.
-
-La aplicación completa se genera en dist, con la interfaz Vue y el runtime de .NET para Windows x64.
-
-## Configurar la biblioteca
-
-En Configuración, elegí la carpeta raíz de tus assets. También podés establecer la variable de entorno VRC_LIBRARY_ROOT antes de iniciar la aplicación.
-
-Los ajustes y favoritos de escritorio se guardan en:
-
-~~~text
-%LOCALAPPDATA%\VrcShelfDesktop
-~~~
-
-La biblioteca utiliza carpetas por categoría y puede leer los metadatos de 99_Catalogo. El catálogo se actualiza al iniciar la app o al solicitar una actualización.
-
-## Estructura del proyecto
-
-| Carpeta o archivo | Responsabilidad |
-| --- | --- |
-| Models | Catálogo, persistencia y operaciones con archivos |
-| Views | Ventana nativa e integración con WebView2 |
-| Controllers | Solicitudes de la interfaz hacia las funciones de escritorio |
-| ui/src | Componentes, estilos y lógica de Vue |
-| ui/public | Fuentes y avisos de terceros |
-| ui/tests | Pruebas de la interfaz y de integración |
-| ui/server | Servidor utilizado por las pruebas de integración |
-| Tests | Comprobaciones de C# |
-| Properties/PublishProfiles | Perfil de publicación para Windows |
-| Program.cs | Punto de entrada de la aplicación |
-
-## Pruebas
-
-Comprobaciones nativas:
-
-~~~powershell
-dotnet run --project .\Tests\Checks.csproj -c Release
-~~~
-
-Pruebas de Vue e integración:
-
-~~~powershell
-cd ui
-npm ci
-npm run build
-npm test
-~~~
-
 ## Licencia
 
 El código del proyecto se distribuye bajo la [licencia MIT](LICENSE), con copyright de KHiga007.
