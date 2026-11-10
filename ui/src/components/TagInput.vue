@@ -1,0 +1,10 @@
+<script setup>
+import {ref,computed} from 'vue';
+const props=defineProps({modelValue:Array,options:Array});const emit=defineEmits(['update:modelValue']);const query=ref(''),open=ref(false);
+const normalized=s=>s.trim().toLocaleLowerCase();
+const matches=computed(()=>[...new Set(props.options||[])].filter(t=>!props.modelValue.some(v=>normalized(v)===normalized(t))&&normalized(t).includes(normalized(query.value))).slice(0,30));
+const canCreate=computed(()=>query.value.trim()&&!props.options.some(t=>normalized(t)===normalized(query.value))&&!props.modelValue.some(t=>normalized(t)===normalized(query.value)));
+function add(value){const name=value.trim();if(name&&!props.modelValue.some(t=>normalized(t)===normalized(name)))emit('update:modelValue',[...props.modelValue,name]);query.value='';open.value=false;}
+function enter(){if(canCreate.value)add(query.value);else if(matches.value.length)add(matches.value[0]);}
+</script>
+<template><div class="tag-input" @focusout="e=>{if(!e.currentTarget.contains(e.relatedTarget))open=false}" @keydown.esc.stop="open=false"><div class="tag-input-control"><span v-for="tag in modelValue" :key="tag" class="tag-input-chip">{{tag}}<button type="button" :aria-label="'Quitar '+tag" @click="emit('update:modelValue',modelValue.filter(t=>t!==tag))">×</button></span><input v-model="query" placeholder="Buscar o crear tag…" aria-label="Buscar o crear tag" @focus="open=true" @input="open=true" @keydown.enter.prevent="enter" @keydown.,.prevent="enter"/></div><div v-if="open" class="tag-input-options"><button v-for="tag in matches" :key="tag" type="button" @click="add(tag)">{{tag}}</button><button v-if="canCreate" type="button" class="create-tag" @click="add(query)">＋ Crear «{{query.trim()}}»</button><p v-if="!matches.length&&!canCreate">No hay etiquetas disponibles</p></div></div></template>

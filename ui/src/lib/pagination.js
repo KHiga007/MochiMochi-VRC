@@ -1,0 +1,1 @@
+export function paginationItems(page,total){if(total<=7)return Array.from({length:total},(_,i)=>i+1);const start=Math.max(2,Math.min(page-1,total-4)),end=Math.min(total-1,Math.max(page+1,5));const result=[1];if(start>2)result.push('before');for(let n=start;n<=end;n++)result.push(n);if(end<total-1)result.push('after');result.push(total);return result;}

@@ -1,0 +1,13 @@
+bin/
+obj/
+dist/
+dist-next/
+node_modules/
+.vs/
+*.user
+*.suo
+*.log
+.env
+.env.*
+personal-data.json*
+initial-personal-data.json*

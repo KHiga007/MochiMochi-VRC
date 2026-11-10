@@ -1,0 +1,9 @@
+<script setup>
+import {inject,ref,onMounted,nextTick} from 'vue';
+import DropZone from '../DropZone.vue';
+import {categories} from '../../lib/catalog';
+const {form,frozen,setPreview,clearPreview,fileNotice}=inject('productWizard');const picker=ref(),nameInput=ref();
+onMounted(async()=>{await nextTick();nameInput.value?.focus();});
+function picked(e){setPreview(e.target.files[0]);e.target.value='';}
+</script>
+<template><section class="wizard-step-details"><div class="wizard-details-cover"><label>Portada</label><DropZone cover :preview="form.previewUrl" :disabled="frozen" title="Portada" subtitle="arrastrar, clic o Ctrl+V" @pick="picker.click()" @files="setPreview($event[0])" @remove="clearPreview"/><input ref="picker" type="file" hidden accept="image/png,image/jpeg,image/webp" :disabled="frozen" @change="picked"/><p class="product-paste-hint">También podés pegarla con <kbd>Ctrl+V</kbd></p><p v-if="fileNotice" class="product-inline-notice">{{fileNotice}}</p></div><div class="product-fields"><label class="product-field" for="wizard-product-name"><span>Nombre <b>*</b> <small v-if="form.autoName">· tomado del archivo</small></span><input id="wizard-product-name" ref="nameInput" v-model="form.name" :disabled="frozen" maxlength="180" placeholder="Ej. Sakura Knit para Manuka" @input="form.autoName=false"/></label><label class="product-field" for="wizard-category"><span>Categoría <b>*</b></span><select id="wizard-category" v-model="form.category" :disabled="frozen"><option disabled value="">Seleccionar categoría</option><option v-for="(label,value) in categories" :key="value" :value="value">{{label}}</option></select></label><div class="product-options wizard-single-option"><label><input type="checkbox" v-model="form.adult" :disabled="frozen"/><span><strong>R18</strong><small>Difumina la imagen del card</small></span></label></div></div></section></template>

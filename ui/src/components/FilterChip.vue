@@ -1,0 +1,13 @@
+<script setup>
+import {ref,computed,watch,nextTick,onMounted,onBeforeUnmount} from 'vue';
+import FilterPopover from './FilterPopover.vue';
+const props=defineProps({label:String,searchLabel:String,options:Array,modelValue:Array,open:Boolean,avatar:Boolean,includeGeneric:Boolean,alphabetical:Boolean});const emit=defineEmits(['update:modelValue','update:includeGeneric','open','close']);const trigger=ref(),panel=ref();
+const caption=computed(()=>{const labels=props.modelValue.map(v=>props.options.find(o=>o.value===v)?.label||v);return !labels.length?props.label:props.label+': '+(labels.length>2?labels[0]+' +'+(labels.length-1):labels.join(', '));});
+function position(){if(!props.open||!trigger.value||!panel.value)return;const r=trigger.value.getBoundingClientRect();const w=Math.min(300,innerWidth-24);panel.value.style.width=w+'px';panel.value.style.left=Math.max(12,Math.min(r.left,innerWidth-w-12))+'px';panel.value.style.top=(r.bottom+6)+'px';panel.value.style.maxHeight=Math.max(120,innerHeight-r.bottom-18)+'px';}
+watch(()=>props.open,async value=>{await nextTick();if(value){panel.value.showPopover();position();panel.value.querySelector('input[type=search]')?.focus();}else{if(panel.value?.matches(':popover-open'))panel.value.hidePopover();}});
+function close(){emit('close');nextTick(()=>trigger.value?.focus());}
+function toggle(value){emit('update:modelValue',props.modelValue.includes(value)?props.modelValue.filter(v=>v!==value):[...props.modelValue,value]);}
+function outside(e){if(props.open&&!trigger.value?.contains(e.target)&&!panel.value?.contains(e.target)){if(e.target.closest('.library-filter-chip'))emit('close');else close();}}
+onMounted(()=>{document.addEventListener('pointerdown',outside,true);window.addEventListener('resize',position);document.addEventListener('scroll',position,true);});onBeforeUnmount(()=>{document.removeEventListener('pointerdown',outside,true);window.removeEventListener('resize',position);document.removeEventListener('scroll',position,true);});
+</script>
+<template><div class="library-filter-chip"><button ref="trigger" type="button" :class="{selected:modelValue.length}" :aria-expanded="open" @click="open?close():emit('open')">{{caption}}<svg viewBox="0 0 16 16" :class="{up:open}" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button><div ref="panel" popover="manual" class="library-filter-popover"><FilterPopover v-if="open" :alphabetical="alphabetical" :label="label" :search-label="searchLabel" :options="options" :selected="modelValue" :avatar="avatar" :include-generic="includeGeneric" @toggle="toggle" @clear="emit('update:modelValue',[])" @close="close" @update:include-generic="emit('update:includeGeneric',$event)"/></div></div></template>

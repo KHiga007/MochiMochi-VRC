@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);ui\**;dist\**;dist-next\**;Tests\**</DefaultItemExcludes>
+    <OutputType>WinExe</OutputType>
+    <Version>0.1.0</Version>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>VRC Shelf</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <BuildVue Condition="'$(BuildVue)' == '' and '$(BuildingInsideVisualStudio)' == 'true'">true</BuildVue>
+    <DisableFastUpToDateCheck Condition="'$(BuildVue)' == 'true'">true</DisableFastUpToDateCheck>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
+    <None Include="ui\src\**\*;ui\public\**\*;ui\tests\**\*;ui\server\**\*;ui\index.html;ui\package.json;ui\package-lock.json;ui\vite.config.js" />
+  </ItemGroup>
+  <Target Name="RestoreVueDependencies"
+          Condition="'$(BuildVue)' == 'true' and '$(DesignTimeBuild)' != 'true'"
+          Inputs="ui\package.json;ui\package-lock.json"
+          Outputs="ui\node_modules\.mochimochi-restore">
+    <Exec Command="npm.cmd ci --prefer-offline" WorkingDirectory="$(MSBuildProjectDirectory)\ui" />
+    <Touch Files="ui\node_modules\.mochimochi-restore" AlwaysCreate="true" />
+  </Target>
+  <Target Name="CompileVue"
+          DependsOnTargets="RestoreVueDependencies"
+          Condition="'$(BuildVue)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+    <Exec Command="npm.cmd run build" WorkingDirectory="$(MSBuildProjectDirectory)\ui" />
+  </Target>
+  <ItemGroup>
+    <Content Include="ui\dist\**\*" Link="web\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="CopyVueForDebugging" AfterTargets="Build" DependsOnTargets="CompileVue"
+          Condition="'$(BuildVue)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+    <ItemGroup>
+      <VueOutput Include="ui\dist\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(VueOutput)"
+          DestinationFiles="@(VueOutput->'$(TargetDir)web\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="RemoveUnusedWpfReference" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <Reference Remove="@(Reference)" Condition="$([System.String]::Copy('%(Reference.Identity)').EndsWith('Microsoft.Web.WebView2.Wpf.dll'))" />
+    </ItemGroup>
+  </Target>
+</Project>
+
+

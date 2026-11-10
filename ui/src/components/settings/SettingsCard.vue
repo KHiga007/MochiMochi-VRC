@@ -1,0 +1,1 @@
+<template><div class="config-card"><slot/></div></template>

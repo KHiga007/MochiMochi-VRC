@@ -1,0 +1,41 @@
+<script setup>
+import {ref,computed,onMounted,onBeforeUnmount,nextTick,watch} from 'vue';
+import SettingsIcon from './SettingsIcon.vue';
+import {size} from '../lib/catalog';
+import SettingsCard from './settings/SettingsCard.vue';
+import SettingsRow from './settings/SettingsRow.vue';
+import ThemePicker from './settings/ThemePicker.vue';
+import AboutView from './settings/AboutView.vue';
+import {appVersion,licenses} from '../config/app';
+import '../styles/settings-modal.css';
+const props=defineProps({scanning:Boolean,count:Number,bytes:Number,lastRead:Number,theme:String});
+const emit=defineEmits(['close','refresh','update:theme']);
+const panel=ref(),closeButton=ref(),info=ref({}),error=ref(''),changing=ref(false),copied=ref(false),now=ref(Date.now());
+const visible=ref(true);
+function closeSettings(){visible.value=false;}
+const view=ref('ajustes'),viewFocus=ref(),licenseText=ref(''),licenseTitle=ref('');
+const version=computed(()=>appVersion(info.value));
+const lastReadLabel=computed(()=>{if(!props.lastRead)return 'Sin lectura';const seconds=Math.max(0,Math.floor((now.value-props.lastRead)/1000));return seconds<60?'hace segundos':seconds<3600?'hace '+Math.floor(seconds/60)+' min':'hace '+Math.floor(seconds/3600)+' h';});
+watch(view,async()=>{licenseText.value='';error.value='';await nextTick();viewFocus.value?.focus();});
+async function readLicense(item){try{const response=await fetch(item.file);if(!response.ok)throw Error('No se pudo leer la licencia');licenseText.value=await response.text();licenseTitle.value=item.name;}catch(e){error.value=e.message;}}
+function escapeView(){if(licenseText.value){licenseText.value='';return;}if(view.value==='licencias')view.value='acerca';else if(view.value==='acerca')view.value='ajustes';else closeSettings();}
+let previousFocus,interval,copyTimer;const inertElements=[];
+async function request(url,options){const response=await fetch(url,options);const data=await response.json();if(!response.ok)throw Error(data.error||'No se pudo completar la acción');return data;}
+async function loadInfo(){try{info.value=await request('/api/desktop/settings');}catch(e){error.value=e.message;}}
+async function changeFolder(){changing.value=true;error.value='';try{info.value=await request('/api/desktop/choose-library',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});emit('refresh');}catch(e){error.value=e.message;}finally{changing.value=false;}}
+async function openFolder(){error.value='';try{await request('/api/open-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:''})});}catch(e){error.value=e.message;}}
+async function copyPath(){try{await navigator.clipboard.writeText(info.value.dataPath);copied.value=true;clearTimeout(copyTimer);copyTimer=setTimeout(()=>copied.value=false,1500);}catch{error.value='No se pudo copiar la ruta';}}
+const summary=computed(()=>{const fragments=[];if(props.count!=null)fragments.push(props.count+' assets');if(props.bytes!=null)fragments.push(size(props.bytes));if(props.lastRead){const seconds=Math.max(0,Math.floor((now.value-props.lastRead)/1000));fragments.push('leída '+(seconds<60?'hace unos segundos':seconds<3600?'hace '+Math.floor(seconds/60)+' min':'hace '+Math.floor(seconds/3600)+' h'));}return fragments.join(' · ');});
+function keydown(event){
+ if(!visible.value)return;
+ if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();escapeView();return;}
+ if(event.key!=='Tab')return;
+ const controls=[...panel.value.querySelectorAll('button:not(:disabled),input:not(:disabled),a[href],[tabindex="0"]')].filter(e=>e.getClientRects().length);
+ const first=controls[0],last=controls.at(-1);if(!controls.length){event.preventDefault();panel.value.focus();return;}
+ if(event.shiftKey&&(document.activeElement===first||!panel.value.contains(document.activeElement))){event.preventDefault();last.focus();}
+ else if(!event.shiftKey&&(document.activeElement===last||!panel.value.contains(document.activeElement))){event.preventDefault();first.focus();}
+}
+onMounted(async()=>{previousFocus=document.activeElement;document.querySelectorAll('.shelf-navbar,.shelf-browser').forEach(e=>{inertElements.push([e,e.inert]);e.inert=true;});document.addEventListener('keydown',keydown,true);interval=setInterval(()=>now.value=Date.now(),15000);await nextTick();closeButton.value?.focus();await loadInfo();});
+onBeforeUnmount(()=>{document.removeEventListener('keydown',keydown,true);clearInterval(interval);clearTimeout(copyTimer);inertElements.forEach(([e,was])=>e.inert=was);view.value='ajustes';previousFocus?.focus();});
+</script>
+<template><Teleport to="body"><Transition name="config-modal" :duration="{enter:240,leave:180}" appear @after-leave="emit('close')"><div v-if="visible" class="config-modal-layer"><div class="config-scrim" @click="closeSettings" aria-hidden="true"></div><section ref="panel" class="config-modal" role="dialog" aria-modal="true" :aria-labelledby="view==='ajustes'?'config-title':'config-back'" tabindex="-1"><header class="config-header"><h2 v-if="view==='ajustes'" ref="viewFocus" tabindex="-1" id="config-title">Configuración</h2><button v-else id="config-back" ref="viewFocus" type="button" class="config-back" @click="view=view==='licencias'?'acerca':'ajustes'"><span aria-hidden="true">‹</span>{{view==='licencias'?'Acerca de':'Configuración'}}</button><button ref="closeButton" type="button" class="config-close" aria-label="Cerrar" @click="closeSettings"><SettingsIcon name="x"/></button></header><div class="config-scroll"><Transition name="config-view" mode="out-in" @after-enter="viewFocus?.focus()"><div v-if="view==='ajustes'" key="ajustes" class="config-settings-body"><section><h3>BIBLIOTECA</h3><SettingsCard><div class="config-library-top"><div class="config-folder-row"><span class="config-folder-icon"><SettingsIcon name="folder"/></span><div><span>Carpeta</span><p :title="info.libraryRoot">{{info.libraryRoot||'Leyendo…'}}</p></div><button type="button" class="config-change" :disabled="changing" @click="changeFolder">{{changing?'Abriendo…':'Cambiar…'}}</button></div><div class="config-stats"><div><strong>{{count??'—'}}</strong><small>assets</small></div><div><strong>{{bytes!=null?size(bytes):'—'}}</strong><small>en disco</small></div><div><strong>{{lastReadLabel}}</strong><small>última lectura</small></div></div></div><SettingsRow icon="external-link" title="Abrir en el Explorador" @click="openFolder"/><SettingsRow icon="refresh" :title="scanning?'Leyendo…':'Volver a leer la biblioteca'" :spinning="scanning" :disabled="scanning" @click="emit('refresh')"><kbd>F5</kbd></SettingsRow><SettingsRow :icon="copied?'check':'copy'" title="Copiar ruta de datos de la app" :disabled="!info.dataPath" :data-path="info.dataPath" @click="copyPath"><span :title="info.dataPath" :class="{'config-copied':copied}">{{copied?'¡Copiado!':'AppData\\Local'}}</span></SettingsRow></SettingsCard></section><section><h3>TEMA</h3><ThemePicker :model-value="theme" @update:model-value="emit('update:theme',$event)"/></section></div><AboutView v-else-if="view==='acerca'" key="acerca" :version="version" @licenses="view='licencias'"/><div v-else key="licencias" class="config-licenses"><h2 tabindex="-1">Licencias de código abierto</h2><p class="config-stack">C# · Microsoft Edge WebView2 · Vue</p><SettingsCard><div v-for="item in licenses" :key="item.name" class="config-license-row"><strong>{{item.name}}</strong><small>{{item.version}} · {{item.type}}</small><a v-if="item.file" :href="item.file" @click.prevent="readLicense(item)">Ver texto de la licencia</a></div></SettingsCard><section v-if="licenseText" class="config-license-text" aria-live="polite"><h3>{{licenseTitle}}</h3><pre>{{licenseText}}</pre></section></div></Transition><p v-if="error" class="config-error" role="alert">{{error}}</p></div><button v-if="view==='ajustes'" type="button" class="config-about-entry" @click="view='acerca'"><span class="config-logo" aria-hidden="true">✦</span><span class="config-about-entry-copy"><strong>Acerca de MochiMochi <span>VRC</span></strong><small>{{version?'Versión '+version:'Leyendo versión…'}}</small></span><SettingsIcon name="chevron"/></button><footer v-else class="config-footer">Funciona 100% en tu PC — sin cuentas ni servidores.</footer></section></div></Transition></Teleport></template>

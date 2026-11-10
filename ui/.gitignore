@@ -1,0 +1,4 @@
+node_modules/
+dist/
+personal-data.json*
+*.log
